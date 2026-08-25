@@ -1,0 +1,46 @@
+# Week 2 lab: one command brings up the API and its database together.
+#   docker compose up -d --build
+#   docker compose logs -f api
+#   docker compose down            (add -v to also delete the data volume)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: taskapi-db
+    environment:
+      POSTGRES_DB: tasks
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskuser -d tasks"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [backend]
+
+  api:
+    build:
+      context: .
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+    container_name: taskapi
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tasks
+      SPRING_DATASOURCE_USERNAME: taskuser
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      APP_ENVIRONMENT: compose
+    ports:
+      - "8080:8080"
+    networks: [backend]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
+networks:
+  backend:

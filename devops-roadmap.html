@@ -1,0 +1,1071 @@
+<title>Twenty Days to Kubernetes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+:root {
+  /* ground & ink — cool, blue-biased neutrals: dockyard steel, not office grey */
+  --ground:      #eef1f3;
+  --surface:     #ffffff;
+  --surface-2:   #f5f7f8;
+  --line:        #d3dbe0;
+  --line-soft:   #e4eaee;
+  --ink:         #0f1a23;
+  --ink-2:       #37485a;
+  --ink-3:       #6b7d8c;
+
+  /* accent — oxidised copper-teal. one bold place. */
+  --accent:      #0d6b68;
+  --accent-soft: #e0efee;
+  --accent-ink:  #08514f;
+
+  /* signal — rust, for warnings and gotchas only */
+  --signal:      #b1521c;
+  --signal-soft: #f8ebe1;
+
+  --shadow: 0 1px 2px rgba(15,26,35,.05), 0 8px 24px -12px rgba(15,26,35,.18);
+
+  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --prose:   "Newsreader", Georgia, "Times New Roman", serif;
+  --mono:    "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #0b1218;
+    --surface:     #111c24;
+    --surface-2:   #16232d;
+    --line:        #273a47;
+    --line-soft:   #1d2d38;
+    --ink:         #dfe8ed;
+    --ink-2:       #a8bbc8;
+    --ink-3:       #7a8e9c;
+
+    --accent:      #4fbeb5;
+    --accent-soft: #10322f;
+    --accent-ink:  #7ad6cd;
+
+    --signal:      #e08b52;
+    --signal-soft: #33200f;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:      #0b1218;
+  --surface:     #111c24;
+  --surface-2:   #16232d;
+  --line:        #273a47;
+  --line-soft:   #1d2d38;
+  --ink:         #dfe8ed;
+  --ink-2:       #a8bbc8;
+  --ink-3:       #7a8e9c;
+
+  --accent:      #4fbeb5;
+  --accent-soft: #10322f;
+  --accent-ink:  #7ad6cd;
+
+  --signal:      #e08b52;
+  --signal-soft: #33200f;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--prose);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 48px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 28px 120px;
+  align-items: start;
+}
+
+/* ---------- rail ---------- */
+
+.rail {
+  position: sticky;
+  top: 0;
+  padding: 40px 0;
+  font-family: var(--display);
+  font-size: 14px;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+.rail-mark {
+  font-weight: 800;
+  letter-spacing: -.02em;
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+.rail-mark span { display: block; color: var(--accent); }
+.rail a {
+  display: block;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 6px 0 6px 14px;
+  border-left: 2px solid var(--line);
+  transition: color .15s, border-color .15s;
+}
+.rail a:hover, .rail a:focus-visible { color: var(--accent); border-left-color: var(--accent); }
+.rail a b { font-weight: 700; color: var(--ink); display: block; font-size: 13px; }
+.rail a em {
+  font-style: normal;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.rail .rail-gap { height: 12px; }
+
+.progress-box {
+  margin-top: 26px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+}
+.progress-box b {
+  display: block;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+.progress-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.progress-track { height: 4px; background: var(--line-soft); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width .3s ease; }
+.progress-box button {
+  margin-top: 10px;
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink-3);
+  border-radius: 2px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.progress-box button:hover { color: var(--signal); border-color: var(--signal); }
+
+/* ---------- main ---------- */
+
+main { padding: 40px 0 0; min-width: 0; }
+
+.masthead { padding: 24px 0 44px; border-bottom: 3px solid var(--ink); }
+.eyebrow {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(40px, 6.4vw, 68px);
+  line-height: .98;
+  letter-spacing: -.035em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 54ch;
+  margin: 0;
+}
+.standfirst strong { color: var(--ink); font-weight: 500; }
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 34px 0 0;
+}
+.fact { background: var(--surface); padding: 14px 16px; }
+.fact dt {
+  font-family: var(--display);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 4px;
+}
+.fact dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+
+section { padding-top: 56px; scroll-margin-top: 24px; }
+
+h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(27px, 3.4vw, 36px);
+  letter-spacing: -.028em;
+  line-height: 1.08;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -.015em;
+  margin: 34px 0 10px;
+}
+h4 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 26px 0 8px;
+}
+p { max-width: var(--measure); margin: 0 0 14px; }
+a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+/* week header block */
+.week-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-top: 3px solid var(--ink);
+  padding-top: 16px;
+}
+.week-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(44px, 6vw, 64px);
+  line-height: .8;
+  letter-spacing: -.05em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.week-title { flex: 1; min-width: 0; }
+.week-sub {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 4px 0 0;
+}
+.week-goal {
+  margin: 18px 0 0;
+  padding: 14px 18px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  font-size: 17px;
+  max-width: var(--measure);
+}
+.week-goal b {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* day blocks */
+.day {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  padding: 18px 22px 6px;
+  margin-top: 18px;
+  box-shadow: var(--shadow);
+}
+.day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.day-tag {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--surface);
+  background: var(--ink);
+  padding: 3px 8px;
+  border-radius: 2px;
+  flex: none;
+}
+.day-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -.015em;
+  margin: 0;
+}
+.day-hours {
+  font-family: var(--display);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-left: auto;
+}
+
+ul.tasks { list-style: none; margin: 0 0 14px; padding: 0; max-width: var(--measure); }
+ul.tasks li {
+  position: relative;
+  padding: 3px 0 3px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+ul.tasks input[type="checkbox"] {
+  appearance: none;
+  flex: none;
+  width: 15px; height: 15px;
+  margin: 6px 0 0;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  background: var(--surface);
+}
+ul.tasks input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+ul.tasks input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px; top: 0.5px;
+  width: 4px; height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(43deg);
+}
+ul.tasks input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+ul.tasks input[type="checkbox"]:checked + span { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--line); }
+ul.tasks span { flex: 1; }
+
+.plain { max-width: var(--measure); padding-left: 20px; margin: 0 0 14px; }
+.plain li { margin-bottom: 5px; }
+
+code, kbd {
+  font-family: var(--mono);
+  font-size: .845em;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+pre {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+pre code { background: none; border: none; padding: 0; color: inherit; white-space: pre; font-size: inherit; }
+pre .c { color: var(--ink-3); }
+
+.done-when {
+  margin: 4px 0 18px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  background: var(--surface-2);
+  font-size: 16px;
+  max-width: var(--measure);
+}
+.done-when b {
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.note {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-left: 3px solid var(--signal);
+  background: var(--signal-soft);
+  font-size: 16px;
+  max-width: var(--measure);
+}
+.note b {
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--signal);
+  display: block;
+  margin-bottom: 3px;
+}
+.note p:last-child { margin-bottom: 0; }
+
+.table-scroll { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--line); border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; font-family: var(--display); font-size: 14.5px; background: var(--surface); }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+th {
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+td code { white-space: nowrap; }
+
+.qa { max-width: var(--measure); margin: 0 0 20px; }
+.qa details {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
+.qa summary {
+  cursor: pointer;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -.01em;
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::before {
+  content: "+";
+  color: var(--accent);
+  font-weight: 800;
+  flex: none;
+  width: 14px;
+}
+.qa details[open] summary::before { content: "–"; }
+.qa details p { margin: 10px 0 4px 24px; font-size: 16.5px; color: var(--ink-2); }
+.qa summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 0 0 20px; }
+.card {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface);
+  padding: 16px 18px;
+}
+.card h4 { margin-top: 0; }
+.card p { font-size: 16px; margin-bottom: 0; }
+.card ul { margin: 0; padding-left: 18px; font-size: 16px; }
+
+footer {
+  margin-top: 72px;
+  padding-top: 22px;
+  border-top: 3px solid var(--ink);
+  font-family: var(--display);
+  font-size: 13px;
+  color: var(--ink-3);
+  max-width: var(--measure);
+}
+
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 0; padding: 0 20px 80px; }
+  .rail { position: static; max-height: none; padding: 28px 0 0; }
+  .rail nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2px; }
+  .rail .rail-gap { display: none; }
+  body { font-size: 16.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="wrap">
+
+  <aside class="rail">
+    <div class="rail-mark">Twenty Days<span>to Kubernetes</span></div>
+    <nav>
+      <a href="#start"><em>Day 0</em><b>Before you begin</b></a>
+      <div class="rail-gap"></div>
+      <a href="#week1"><em>Week 1</em><b>Linux &amp; Git</b></a>
+      <a href="#week2"><em>Week 2</em><b>Docker</b></a>
+      <a href="#week3"><em>Week 3</em><b>Pipelines</b></a>
+      <a href="#week4"><em>Week 4</em><b>Kubernetes &amp; cloud</b></a>
+      <div class="rail-gap"></div>
+      <a href="#interview"><em>After</em><b>Interview answers</b></a>
+      <a href="#next"><em>After</em><b>Where to go next</b></a>
+    </nav>
+    <div class="progress-box">
+      <b>Progress</b>
+      <div class="progress-num"><span id="pct">0</span>%</div>
+      <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+      <button id="reset" type="button">Reset</button>
+    </div>
+  </aside>
+
+  <main>
+
+    <header class="masthead">
+      <p class="eyebrow">Intensive lab · one repo · three environments</p>
+      <h1>Twenty Days to Kubernetes</h1>
+      <p class="standfirst">A four-week, full-time DevOps course built around <strong>one small Spring Boot API</strong> that you version, containerise, pipeline, orchestrate and operate — until the tooling stops being a mystery and starts being muscle memory.</p>
+      <dl class="facts">
+        <div class="fact"><dt>Shape</dt><dd>4 weeks · 20 days</dd></div>
+        <div class="fact"><dt>Daily load</dt><dd>6–8 hours</dd></div>
+        <div class="fact"><dt>Project</dt><dd>task-api (Java 21)</dd></div>
+        <div class="fact"><dt>Machines</dt><dd>WSL2 · Pi 5 · cloud</dd></div>
+      </dl>
+    </header>
+
+    <section id="start">
+      <h2>Before you begin</h2>
+      <p>You already know Java, Spring Boot and Docker's basics — so the application layer is deliberately boring. Everything you build from Monday onwards is infrastructure, and every problem you hit will be an infrastructure problem. That is the whole design.</p>
+
+      <h3>The one rule</h3>
+      <p>Every change reaches every environment through a pipeline. Not <code>scp</code>. Not "just this once". The moment you hand-copy a jar onto the Pi, you have stopped learning DevOps and gone back to being a sysadmin.</p>
+
+      <h3>Your three environments</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Machine</th><th>Role</th><th>What it teaches</th></tr></thead>
+          <tbody>
+            <tr><td><b>Windows laptop</b><br>WSL2 + Docker Desktop</td><td>Development</td><td>Linux fluency, Docker, Jenkins, a k3d cluster you can destroy freely</td></tr>
+            <tr><td><b>Raspberry Pi 5</b><br>k3s</td><td>Production</td><td>Remote Linux, SSH, ARM64 multi-arch builds, real resource limits, real consequences</td></tr>
+            <tr><td><b>Cloud free tier</b><br>Oracle / AWS</td><td>Exposure</td><td>VPC, security groups, IAM, managed services — the vocabulary of UK job adverts</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <b>Do this first</b>
+        <p>Keep a <code>LEARNINGS.md</code> in the repo from day one. Every time something breaks and you fix it, write three lines: symptom, cause, fix. In four weeks that file becomes your interview prep — and specific war stories beat "I have experience with Kubernetes" every single time.</p>
+      </div>
+
+      <h4>Day 0 setup checklist</h4>
+      <ul class="tasks">
+        <li><input type="checkbox" id="t-d0-1"><span>WSL2 + Ubuntu 24.04 installed; <code>wsl -l -v</code> shows VERSION 2</span></li>
+        <li><input type="checkbox" id="t-d0-2"><span>Docker Desktop installed with WSL integration enabled for Ubuntu</span></li>
+        <li><input type="checkbox" id="t-d0-3"><span>JDK 21 + Maven inside WSL; <code>mvn -version</code> works</span></li>
+        <li><input type="checkbox" id="t-d0-4"><span>VS Code with the WSL extension; repo lives in <code>~/projects</code>, not <code>/mnt/c</code></span></li>
+        <li><input type="checkbox" id="t-d0-5"><span>GitHub account with an SSH key added; <code>ssh -T git@github.com</code> authenticates</span></li>
+        <li><input type="checkbox" id="t-d0-6"><span>Pi reachable over SSH; <code>docker ps -a</code> snapshot saved before you touch anything</span></li>
+        <li><input type="checkbox" id="t-d0-7"><span><code>mvn clean verify</code> passes on the starter project — 4 green tests</span></li>
+      </ul>
+    </section>
+
+    <!-- ============ WEEK 1 ============ -->
+    <section id="week1">
+      <div class="week-head">
+        <div class="week-num">01</div>
+        <div class="week-title">
+          <h2>Linux &amp; Git</h2>
+          <p class="week-sub">The two things everything else stands on</p>
+        </div>
+      </div>
+      <div class="week-goal"><b>By Friday</b>You are comfortable on a bare Linux shell, your project is on GitHub with branch protection, and a GitHub Actions pipeline runs your tests on every push.</div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 1</span><h3 class="day-name">Filesystem, permissions, text</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-1-1"><span>Navigate and inspect: <code>pwd cd ls -la find grep -r less tail -f tree</code></span></li>
+          <li><input type="checkbox" id="t-1-2"><span>Permissions until <code>755</code> vs <code>644</code> needs no thought: <code>chmod chown</code>, and what the three triads mean</span></li>
+          <li><input type="checkbox" id="t-1-3"><span>Pipes and filters: <code>| &gt; &gt;&gt; grep awk sed sort uniq -c wc -l cut xargs</code></span></li>
+          <li><input type="checkbox" id="t-1-4"><span>Learn enough <code>vim</code> to escape it: <code>i</code>, <kbd>Esc</kbd>, <code>:wq</code>, <code>/search</code>, <code>dd</code></span></li>
+        </ul>
+        <p><b>Drill:</b> take any log file and answer, in one pipeline each — how many ERROR lines? which 5 IP addresses appear most? what were the last 20 lines before the first exception?</p>
+        <div class="done-when"><b>Done when</b>You can answer those three questions without opening a browser.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 2</span><h3 class="day-name">Processes, services, networking</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-2-1"><span>Processes: <code>ps aux</code>, <code>htop</code>, <code>kill</code> vs <code>kill -9</code>, <code>&amp;</code>, <code>jobs</code>, <code>nohup</code></span></li>
+          <li><input type="checkbox" id="t-2-2"><span><code>systemctl status/start/stop/enable</code> and <code>journalctl -u &lt;svc&gt; -f</code> — the two commands you will use most on any real server</span></li>
+          <li><input type="checkbox" id="t-2-3"><span>Networking: <code>ss -tulpn</code>, <code>curl -v</code>, <code>dig</code>, <code>ping</code>. Understand ports, and <code>127.0.0.1</code> vs <code>0.0.0.0</code></span></li>
+          <li><input type="checkbox" id="t-2-4"><span>Write a <code>systemd</code> unit that runs the task-api jar, enable it, reboot, confirm it came back up</span></li>
+        </ul>
+        <div class="note">
+          <b>The one that catches everyone</b>
+          <p>A service bound to <code>127.0.0.1</code> is unreachable from outside its own machine — or, later, from outside its own container. Half of all "but it works locally" bugs are this. Learn to spot it in <code>ss -tulpn</code> output now.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>The jar restarts automatically after <code>sudo reboot</code>, and you can read its logs with <code>journalctl</code>.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 3</span><h3 class="day-name">SSH, the Pi, and shell scripting</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-3-1"><span>Key-based SSH to the Pi: <code>ssh-keygen -t ed25519</code>, <code>ssh-copy-id</code>, then a <code>~/.ssh/config</code> entry so <code>ssh pi</code> just works</span></li>
+          <li><input type="checkbox" id="t-3-2"><span>Harden the Pi: disable password auth and root login. <b>Keep your current session open while you test the change.</b></span></li>
+          <li><input type="checkbox" id="t-3-3"><span>Shell scripting: shebang, <code>set -euo pipefail</code>, <code>$1</code>, <code>if</code>/<code>for</code>, exit codes, <code>trap</code></span></li>
+          <li><input type="checkbox" id="t-3-4"><span>Write <code>healthcheck.sh</code>: curl <code>/actuator/health</code>, parse with <code>jq</code>, exit 0 if UP, log with a timestamp, schedule with <code>cron</code></span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b><code>ssh pi</code> logs in without a password, password auth is off, and cron is appending health lines every 5 minutes.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 4</span><h3 class="day-name">Git properly</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-4-1"><span>Init the repo, <code>.gitignore</code> <em>before</em> the first commit, push to GitHub</span></li>
+          <li><input type="checkbox" id="t-4-2"><span>The daily loop, ten times over: branch → edit → <code>git add -p</code> → commit → push → PR → squash merge → delete branch</span></li>
+          <li><input type="checkbox" id="t-4-3"><span>Recovery commands: <code>restore</code>, <code>reset --soft</code>, <code>commit --amend</code>, <code>stash</code>, <code>revert</code>, <code>reflog</code></span></li>
+          <li><input type="checkbox" id="t-4-4"><span>Cause a merge conflict deliberately and resolve it. Then do it again.</span></li>
+          <li><input type="checkbox" id="t-4-5"><span>Read history like an investigator: <code>log --oneline --graph</code>, <code>blame</code>, <code>show &lt;sha&gt;</code>, <code>bisect</code></span></li>
+        </ul>
+        <div class="note">
+          <b>Know the difference</b>
+          <p><code>revert</code> creates a new commit that undoes an old one — safe on shared branches. <code>reset --hard</code> rewrites history — safe only on a branch nobody else has. Getting this wrong on <code>main</code> is how people ruin a Friday afternoon for the whole team.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>You've resolved a conflict without googling, and recovered a "lost" commit with <code>reflog</code>.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 5</span><h3 class="day-name">First pipeline: GitHub Actions</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-5-1"><span>Read <code>.github/workflows/ci.yml</code> line by line. Know what <code>on</code>, <code>jobs</code>, <code>steps</code>, <code>uses</code> and <code>run</code> each do</span></li>
+          <li><input type="checkbox" id="t-5-2"><span>Push and watch it run. Break a test on purpose; watch it go red; read the failure in the Actions log</span></li>
+          <li><input type="checkbox" id="t-5-3"><span>Turn on branch protection for <code>main</code>: require the CI check, require a PR. Then try pushing straight to <code>main</code> and get rejected</span></li>
+          <li><input type="checkbox" id="t-5-4"><span>Add a status badge to the README</span></li>
+          <li><input type="checkbox" id="t-5-5"><span>Add a second job that only runs on <code>main</code>, and prove it skips on feature branches</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>A red pipeline physically prevents you from merging your own PR. That constraint <em>is</em> continuous integration.</div>
+      </div>
+
+      <h4>Be able to explain</h4>
+      <ul class="plain">
+        <li>What a file's permission bits actually mean, and why <code>chmod 777</code> is a smell.</li>
+        <li>The difference between a merge and a rebase, and when each is appropriate.</li>
+        <li>Why CI exists — what problem it solved that manual testing did not.</li>
+      </ul>
+    </section>
+
+    <!-- ============ WEEK 2 ============ -->
+    <section id="week2">
+      <div class="week-head">
+        <div class="week-num">02</div>
+        <div class="week-title">
+          <h2>Docker</h2>
+          <p class="week-sub">From "it works on my machine" to an image you can hand to anyone</p>
+        </div>
+      </div>
+      <div class="week-goal"><b>By Friday</b>A multi-stage, non-root, multi-architecture image of task-api is published to a registry by CI, and the same image runs on both your laptop and your Pi.</div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 6</span><h3 class="day-name">Images, containers, layers</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-6-1"><span>Core verbs: <code>run</code>, <code>ps -a</code>, <code>logs</code>, <code>exec -it</code>, <code>stop</code>, <code>rm</code>, <code>images</code>, <code>rmi</code>, <code>inspect</code></span></li>
+          <li><input type="checkbox" id="t-6-2"><span>Understand the image/container distinction properly — an image is a template, a container is a running instance with a writable layer on top</span></li>
+          <li><input type="checkbox" id="t-6-3"><span>Run <code>docker run -it ubuntu bash</code>, install something, exit, run it again. Watch your change disappear. That is layer immutability</span></li>
+          <li><input type="checkbox" id="t-6-4"><span>Write the simplest possible Dockerfile for task-api. Note the image size</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>You can explain why a container that "does nothing" exits immediately.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 7</span><h3 class="day-name">Dockerfile craft</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-7-1"><span>Rewrite as a multi-stage build (JDK to build, JRE to run). Compare sizes — expect roughly 800MB down to 250MB</span></li>
+          <li><input type="checkbox" id="t-7-2"><span>Order the layers for cache: <code>COPY pom.xml</code> and resolve dependencies <em>before</em> <code>COPY src</code>. Change one Java file and time the rebuild</span></li>
+          <li><input type="checkbox" id="t-7-3"><span>Add a non-root user and a <code>HEALTHCHECK</code>. Understand why running as root inside a container matters</span></li>
+          <li><input type="checkbox" id="t-7-4"><span>Write a <code>.dockerignore</code>. Check the build context size before and after</span></li>
+          <li><input type="checkbox" id="t-7-5"><span><code>ARG</code> vs <code>ENV</code>, <code>CMD</code> vs <code>ENTRYPOINT</code> — know which is overridable and when</span></li>
+        </ul>
+        <div class="note">
+          <b>Never bake in a secret</b>
+          <p>Anything you <code>COPY</code> or <code>ENV</code> into an image is visible to anyone who pulls it — <code>docker history</code> shows it even if a later layer deletes the file. Secrets come in at <em>runtime</em>, from the platform. This is a favourite interview question.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>A one-line Java change rebuilds in seconds, not minutes, and <code>docker history</code> shows no JDK in the final image.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 8</span><h3 class="day-name">Networks, volumes, and data that survives</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-8-1"><span>Create a user-defined network. Run Postgres and task-api on it. Connect using the <em>service name</em>, not an IP</span></li>
+          <li><input type="checkbox" id="t-8-2"><span>Named volumes vs bind mounts. Kill the Postgres container, recreate it, prove the data is still there</span></li>
+          <li><input type="checkbox" id="t-8-3"><span>Port publishing: <code>-p 8080:8080</code> — know which side is the host</span></li>
+          <li><input type="checkbox" id="t-8-4"><span>Deliberately break it: point the app at <code>localhost:5432</code> and understand exactly why it fails inside a container</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>You can draw the two containers, the bridge network and the volume on paper, from memory.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 9</span><h3 class="day-name">Compose, and the ARM64 lesson</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-9-1"><span>Bring the whole stack up with <code>docker compose up -d --build</code>; read every line of the compose file</span></li>
+          <li><input type="checkbox" id="t-9-2"><span>Add a <code>healthcheck</code> to the DB and <code>depends_on: condition: service_healthy</code> to the app. Understand why <code>depends_on</code> alone is not enough</span></li>
+          <li><input type="checkbox" id="t-9-3"><span>Move the password out of the compose file into <code>.env</code>; confirm <code>.env</code> is gitignored</span></li>
+          <li><input type="checkbox" id="t-9-4"><span>Copy the image to the Pi and run it. Watch it fail with <code>exec format error</code></span></li>
+          <li><input type="checkbox" id="t-9-5"><span>Fix it: <code>docker buildx build --platform linux/amd64,linux/arm64 --push</code></span></li>
+        </ul>
+        <div class="note">
+          <b>This day is worth more than it looks</b>
+          <p>The AMD64-versus-ARM64 failure is the most instructive bug in the whole course. It forces you to understand that an image is not universal, that a registry stores a manifest list, and that "works on my machine" has a hardware dimension too. Write it up in <code>LEARNINGS.md</code>.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>One <code>buildx</code> command produces an image that runs unmodified on both machines.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 10</span><h3 class="day-name">Registry, scanning, and CI that ships</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-10-1"><span>Push to GitHub Container Registry from your laptop, then pull it on the Pi</span></li>
+          <li><input type="checkbox" id="t-10-2"><span>Extend the Actions workflow to build and push on every merge to <code>main</code>, tagged with the commit SHA <em>and</em> <code>latest</code></span></li>
+          <li><input type="checkbox" id="t-10-3"><span>Add <code>platforms: linux/amd64,linux/arm64</code> to the build step</span></li>
+          <li><input type="checkbox" id="t-10-4"><span>Scan the image: <code>docker scout cves</code> or Trivy. Fix one real finding by moving to a newer base image</span></li>
+          <li><input type="checkbox" id="t-10-5"><span>Deploy to the Pi with compose, pulling from the registry — no local build on the Pi</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>Merging a PR results, with no further action from you, in a new image on the registry that the Pi can pull.</div>
+      </div>
+
+      <h4>Be able to explain</h4>
+      <ul class="plain">
+        <li>Why a container is not a VM, and what the kernel is doing (namespaces, cgroups).</li>
+        <li>Why tagging everything <code>latest</code> makes rollback impossible.</li>
+        <li>Where secrets should live, and why not in the image.</li>
+      </ul>
+    </section>
+
+    <!-- ============ WEEK 3 ============ -->
+    <section id="week3">
+      <div class="week-head">
+        <div class="week-num">03</div>
+        <div class="week-title">
+          <h2>Pipelines</h2>
+          <p class="week-sub">Jenkins — because the UK job market still runs on it</p>
+        </div>
+      </div>
+      <div class="week-goal"><b>By Friday</b>A Jenkins multibranch pipeline builds, tests, images, pushes and deploys task-api, gated by a quality check and a manual approval — and you can articulate how it differs from GitHub Actions.</div>
+
+      <div class="note">
+        <b>Why Jenkins if Actions already works?</b>
+        <p>Because a large share of UK enterprise roles — banks, insurers, government, logistics — run Jenkins on-premise and will keep doing so for years. Actions teaches you CI/CD concepts faster; Jenkins is what the job advert asks for. You are learning both on purpose, and being able to compare them is itself an interview answer.</p>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 11</span><h3 class="day-name">Stand Jenkins up</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-11-1"><span>Run <code>jenkins/jenkins:lts-jdk21</code> in Docker with a persistent volume; unlock it and install the suggested plugins</span></li>
+          <li><input type="checkbox" id="t-11-2"><span>Add the Docker Pipeline plugin; install the Docker CLI and <code>kubectl</code> inside the Jenkins container</span></li>
+          <li><input type="checkbox" id="t-11-3"><span>Configure Tools: JDK named <code>jdk21</code>, Maven named <code>maven3</code> — names must match the Jenkinsfile</span></li>
+          <li><input type="checkbox" id="t-11-4"><span>Understand the controller/agent model, and why builds should not run on the controller in production</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b><code>docker version</code> and <code>kubectl version --client</code> both work from a Jenkins freestyle shell step.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 12</span><h3 class="day-name">Your first Jenkinsfile</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-12-1"><span>Create a <b>Multibranch Pipeline</b> job pointed at your GitHub repo</span></li>
+          <li><input type="checkbox" id="t-12-2"><span>Declarative syntax: <code>pipeline</code>, <code>agent</code>, <code>stages</code>, <code>steps</code>, <code>environment</code>, <code>options</code>, <code>post</code></span></li>
+          <li><input type="checkbox" id="t-12-3"><span>Publish JUnit results and archive the jar; make a test fail and read the report Jenkins renders</span></li>
+          <li><input type="checkbox" id="t-12-4"><span><code>when { branch 'main' }</code> — prove a feature branch skips the deploy stages</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>Jenkins discovers a new feature branch on its own and builds it without you creating a job.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 13</span><h3 class="day-name">Credentials, images, and triggers</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-13-1"><span>Store a registry token as a Jenkins credential; use it via <code>docker.withRegistry</code>. No secret in the repo, ever</span></li>
+          <li><input type="checkbox" id="t-13-2"><span>Build and push the image from the pipeline, tagged with <code>${BUILD_NUMBER}</code></span></li>
+          <li><input type="checkbox" id="t-13-3"><span>Trigger builds on push — poll SCM, or expose Jenkins through <code>ngrok</code> and set a real GitHub webhook</span></li>
+          <li><input type="checkbox" id="t-13-4"><span>Grep the console output for your token and confirm Jenkins masked it</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>A <code>git push</code> starts a Jenkins build within a minute, with no secrets visible in the log.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 14</span><h3 class="day-name">Quality gates and approvals</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-14-1"><span>Add a JaCoCo coverage gate that fails the build below a threshold you set</span></li>
+          <li><input type="checkbox" id="t-14-2"><span>Optional but worth it: run SonarQube in Docker and add a static-analysis stage</span></li>
+          <li><input type="checkbox" id="t-14-3"><span>Add an <code>input</code> step before deploy — a human approval gate — with a <code>timeout</code> so it cannot hang forever</span></li>
+          <li><input type="checkbox" id="t-14-4"><span>Add <code>post { failure { ... } }</code> notification to email or a Slack webhook</span></li>
+          <li><input type="checkbox" id="t-14-5"><span>Deploy to the Pi over SSH from the pipeline: pull the new image, <code>compose up -d</code></span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>Merging to <code>main</code> gets you a Slack/email ping, an approval prompt, and then a running new version on the Pi.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 15</span><h3 class="day-name">Consolidate and compare</h3><span class="day-hours">5–6 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-15-1"><span>Write a one-page comparison: Jenkins vs GitHub Actions — hosting, cost, plugins, secrets, agents, maintenance burden</span></li>
+          <li><input type="checkbox" id="t-15-2"><span>Draw your full pipeline as a diagram: commit → CI → registry → deploy → health check. Put it in the README</span></li>
+          <li><input type="checkbox" id="t-15-3"><span>Break the pipeline in three different places on purpose and fix each. Log all three in <code>LEARNINGS.md</code></span></li>
+          <li><input type="checkbox" id="t-15-4"><span>Catch up on anything that slipped — do not carry debt into week 4</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>You can whiteboard the whole pipeline in under three minutes.</div>
+      </div>
+
+      <h4>Be able to explain</h4>
+      <ul class="plain">
+        <li>Continuous integration vs continuous delivery vs continuous deployment — the differences are real and interviewers probe them.</li>
+        <li>Why the pipeline definition lives in the repo (pipeline-as-code) rather than in the Jenkins UI.</li>
+        <li>What mounting the Docker socket into Jenkins costs you in security, and what you would do instead in production.</li>
+      </ul>
+    </section>
+
+    <!-- ============ WEEK 4 ============ -->
+    <section id="week4">
+      <div class="week-head">
+        <div class="week-num">04</div>
+        <div class="week-title">
+          <h2>Kubernetes &amp; cloud</h2>
+          <p class="week-sub">Scheduling, self-healing, and the vocabulary of the job market</p>
+        </div>
+      </div>
+      <div class="week-goal"><b>By Friday</b>task-api runs on Kubernetes on both k3d and the Pi's k3s, your pipeline deploys to it, you can perform a rolling update and roll it back, and you have stood up one cloud VM by hand.</div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 16</span><h3 class="day-name">Cluster, pods, deployments, services</h3><span class="day-hours">7–8 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-16-1"><span><code>k3d cluster create devops-lab --agents 2</code>; <code>kubectl get nodes</code></span></li>
+          <li><input type="checkbox" id="t-16-2"><span>Understand the object hierarchy: Pod ← ReplicaSet ← Deployment, and why you almost never create a Pod directly</span></li>
+          <li><input type="checkbox" id="t-16-3"><span>Apply the Deployment and Service. Delete a pod by hand and watch a replacement appear — that is the control loop, and it is the whole idea</span></li>
+          <li><input type="checkbox" id="t-16-4"><span><code>port-forward</code> to reach the Service; curl <code>/api/info</code> in a loop and watch the hostname alternate between pods</span></li>
+          <li><input type="checkbox" id="t-16-5"><span>Learn the diagnostic order by heart: <code>get pods</code> → <code>describe pod</code> (read the Events) → <code>logs</code> → <code>logs --previous</code></span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>Two replicas are Ready and you have seen the load balancing with your own eyes.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 17</span><h3 class="day-name">Config, secrets, storage, probes</h3><span class="day-hours">7–8 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-17-1"><span>ConfigMap for the DB URL; Secret for the password, created from the CLI rather than committed</span></li>
+          <li><input type="checkbox" id="t-17-2"><span>Deploy Postgres as a StatefulSet with a PersistentVolumeClaim. Delete the pod; prove the data survived</span></li>
+          <li><input type="checkbox" id="t-17-3"><span>Configure all three probes. Set the liveness probe too aggressively on purpose and watch Kubernetes kill your healthy app in a loop</span></li>
+          <li><input type="checkbox" id="t-17-4"><span>Set resource requests and limits. Set the memory limit too low and meet <code>OOMKilled</code></span></li>
+        </ul>
+        <div class="note">
+          <b>Base64 is not encryption</b>
+          <p>A Kubernetes Secret is base64-encoded, not encrypted, and anyone with read access to the namespace can decode it. Knowing that — and naming Sealed Secrets or an external vault as the real answer — is what separates a considered answer from a memorised one.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>You have deliberately caused <code>CrashLoopBackOff</code> and <code>OOMKilled</code>, and diagnosed each from <code>describe</code> alone.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 18</span><h3 class="day-name">Rollouts, scaling, ingress</h3><span class="day-hours">7–8 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-18-1"><span>Rolling update: <code>kubectl set image</code>, then <code>rollout status</code>. Curl the app throughout and confirm zero dropped requests</span></li>
+          <li><input type="checkbox" id="t-18-2"><span>Deploy a deliberately broken image, watch it fail, then <code>kubectl rollout undo</code>. Time yourself</span></li>
+          <li><input type="checkbox" id="t-18-3"><span>Scale manually with <code>kubectl scale</code>, then add a HorizontalPodAutoscaler and generate load to trigger it</span></li>
+          <li><input type="checkbox" id="t-18-4"><span>Expose through an Ingress; understand how it differs from a Service of type LoadBalancer</span></li>
+          <li><input type="checkbox" id="t-18-5"><span>Wire the deploy into your pipeline: <code>kubectl set image</code> + <code>rollout status</code>, using the kubeconfig credential</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>A merge to <code>main</code> deploys to Kubernetes with no downtime, and you can roll back in under 30 seconds.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 19</span><h3 class="day-name">The Pi cluster, and the cloud</h3><span class="day-hours">7–8 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-19-1"><span>Install k3s on the Pi; copy the kubeconfig to your laptop and drive the cluster remotely</span></li>
+          <li><input type="checkbox" id="t-19-2"><span>Deploy the same manifests there. Tune replicas and memory requests to what a Pi can actually give you alongside Nextcloud</span></li>
+          <li><input type="checkbox" id="t-19-3"><span>Set a billing alert, then create one cloud VM. Harden it exactly as you hardened the Pi</span></li>
+          <li><input type="checkbox" id="t-19-4"><span>Run your image on it. Work out for yourself why port 8080 is unreachable and port 80 is — security groups</span></li>
+          <li><input type="checkbox" id="t-19-5"><span>Write <code>TEARDOWN.md</code>, then follow it and delete everything</span></li>
+        </ul>
+        <div class="note">
+          <b>Cost discipline is a professional skill</b>
+          <p>Idle load balancers, unattached elastic IPs, NAT gateways and managed control planes are what turn a £0 experiment into a £60 surprise. Set the budget alert <em>before</em> you create anything, and tear down at the end of every session. Interviewers notice when a candidate mentions cost unprompted.</p>
+        </div>
+        <div class="done-when"><b>Done when</b>The same image is running on three different machines, and the cloud one is deleted.</div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><span class="day-tag">Day 20</span><h3 class="day-name">Observability, and telling the story</h3><span class="day-hours">6–7 hrs</span></div>
+        <ul class="tasks">
+          <li><input type="checkbox" id="t-20-1"><span>Deploy Prometheus and Grafana into the cluster; scrape <code>/actuator/prometheus</code></span></li>
+          <li><input type="checkbox" id="t-20-2"><span>Build one dashboard that answers three questions: is it up, how fast is it, how much memory is it using</span></li>
+          <li><input type="checkbox" id="t-20-3"><span>Set one alert rule and trigger it deliberately</span></li>
+          <li><input type="checkbox" id="t-20-4"><span>Rewrite the README as a portfolio piece: architecture diagram, the pipeline, screenshots, and what you would do differently</span></li>
+          <li><input type="checkbox" id="t-20-5"><span>Turn <code>LEARNINGS.md</code> into five STAR-format interview stories</span></li>
+        </ul>
+        <div class="done-when"><b>Done when</b>You could hand a stranger the repo URL and they would understand the whole system in five minutes.</div>
+      </div>
+    </section>
+
+    <!-- ============ INTERVIEW ============ -->
+    <section id="interview">
+      <div class="week-head">
+        <div class="week-num">→</div>
+        <div class="week-title">
+          <h2>Questions this project answers</h2>
+          <p class="week-sub">Rehearse these out loud, using your own repo as the example</p>
+        </div>
+      </div>
+
+      <div class="qa">
+        <details>
+          <summary>Walk me through your CI/CD pipeline.</summary>
+          <p>Trace an actual commit: feature branch, PR, tests on GitHub Actions, branch protection blocking the merge until green, merge to main, multi-arch image built and tagged with the commit SHA, pushed to the registry, Jenkins deploying it to Kubernetes with a rolling update and a rollout status check. Naming the SHA tag and the rollback path is what makes this sound like experience rather than a tutorial.</p>
+        </details>
+        <details>
+          <summary>How do you handle secrets?</summary>
+          <p>Never in the image, never in the repo. Jenkins credentials or GitHub Actions secrets at build time; Kubernetes Secrets mounted as environment variables at runtime. Then volunteer the limitation — Kubernetes Secrets are base64, not encrypted — and name Sealed Secrets, External Secrets Operator or Vault as what you would reach for with real data.</p>
+        </details>
+        <details>
+          <summary>A pod is in CrashLoopBackOff. What do you do?</summary>
+          <p><code>kubectl describe pod</code> and read the Events at the bottom first, then <code>kubectl logs --previous</code> to see the output of the instance that died. Most often it is configuration — a wrong datasource URL, a missing environment variable — or a liveness probe firing before a JVM has finished starting, which is exactly what a startupProbe exists to prevent.</p>
+        </details>
+        <details>
+          <summary>Why multi-stage Docker builds?</summary>
+          <p>Size and attack surface. The build stage needs a full JDK and a Maven cache; the runtime needs a JRE and a jar. Multi-stage takes the image from roughly 800MB to 250MB, keeps build tooling and source out of production, and shrinks what a scanner can find. Mention that you also run as a non-root user.</p>
+        </details>
+        <details>
+          <summary>Container versus virtual machine?</summary>
+          <p>A VM virtualises hardware and runs its own kernel; a container is an isolated process on the host kernel, fenced off with namespaces and cgroups. That is why containers start in milliseconds and VMs in tens of seconds — and why a container image is tied to a kernel architecture, which is the ARM64-versus-AMD64 problem you hit on your Pi.</p>
+        </details>
+        <details>
+          <summary>What does Kubernetes actually give you over Docker Compose?</summary>
+          <p>Reconciliation. Compose starts containers; Kubernetes continuously drives actual state toward declared state — rescheduling failed pods, replacing unhealthy ones, rolling updates out gradually and stopping if they fail. Add scaling, service discovery and declarative config, and say plainly that for a single-host side project Compose is often the right answer — knowing when *not* to use Kubernetes reads as judgement.</p>
+        </details>
+        <details>
+          <summary>Tell me about something that broke and what you did.</summary>
+          <p>This is where <code>LEARNINGS.md</code> pays for itself. The multi-arch failure is a strong story: symptom (<code>exec format error</code> on the Pi), diagnosis (<code>docker inspect</code> showing AMD64), fix (buildx multi-platform build), and the lasting change (platform matrix added to CI so it cannot recur). Symptom → diagnosis → fix → prevention is the shape every good answer takes.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ NEXT ============ -->
+    <section id="next">
+      <div class="week-head">
+        <div class="week-num">↗</div>
+        <div class="week-title">
+          <h2>Where to go next</h2>
+          <p class="week-sub">In roughly the order the job market values them</p>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="card">
+          <h4>Terraform</h4>
+          <p>Infrastructure as code is the single most requested skill after Kubernetes. Recreate your cloud VM, network and firewall rules in HCL, then <code>destroy</code> and <code>apply</code> them back. Two days gets you an honest CV line.</p>
+        </div>
+        <div class="card">
+          <h4>Helm</h4>
+          <p>Your <code>k8s/</code> folder is four raw YAML files. Turn them into a chart with values for image tag, replicas and environment — this is how real teams ship the same app to dev, staging and prod.</p>
+        </div>
+        <div class="card">
+          <h4>GitOps — Argo CD</h4>
+          <p>Instead of the pipeline pushing to the cluster, the cluster pulls from Git. Increasingly the default in Kubernetes shops, and a natural evolution of what you already built.</p>
+        </div>
+        <div class="card">
+          <h4>Ansible</h4>
+          <p>Configuration management for the machines that are not containers. Codify the Pi hardening you did by hand in week 1 and you have a real playbook, not a toy one.</p>
+        </div>
+        <div class="card">
+          <h4>Observability, properly</h4>
+          <p>Structured JSON logging, Loki for aggregation, distributed tracing with OpenTelemetry. Then define an SLO for task-api and mean it.</p>
+        </div>
+        <div class="card">
+          <h4>Certification, if you want the badge</h4>
+          <p>The CKA is hands-on and genuinely respected. Everything in week 4 is on the syllabus. AWS Solutions Architect Associate is the broader alternative if you lean cloud.</p>
+        </div>
+      </div>
+
+      <h3>A word on pace</h3>
+      <p>Four weeks at this intensity is demanding, and the days where nothing works are the days you learn most — that is not a setback, it is the curriculum. If a week slips, cut scope inside the week rather than dropping a week; each one depends on the one before it. And if only three weeks are available, drop the cloud day and the observability day, not Docker or Kubernetes.</p>
+    </section>
+
+    <footer>
+      Companion repository: <code>devops-lab</code> — starter Spring Boot project, Dockerfile, compose file, Jenkinsfile, GitHub Actions workflow, Kubernetes manifests, and setup guides for each environment.
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  var KEY = 'devops20-progress';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('ul.tasks input[type="checkbox"]'));
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+
+  function save(state) {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+
+  function paint() {
+    var done = boxes.filter(function (b) { return b.checked; }).length;
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    document.getElementById('pct').textContent = pct;
+    document.getElementById('fill').style.width = pct + '%';
+  }
+
+  var state = load();
+  boxes.forEach(function (b) {
+    if (state[b.id]) b.checked = true;
+    b.addEventListener('change', function () {
+      state[b.id] = b.checked;
+      save(state);
+      paint();
+    });
+  });
+  paint();
+
+  document.getElementById('reset').addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false; });
+    state = {};
+    save(state);
+    paint();
+  });
+})();
+</script>

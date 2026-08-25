@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: task-api-config
+  namespace: taskapi
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tasks
+  SPRING_DATASOURCE_USERNAME: taskuser
+  APP_ENVIRONMENT: kubernetes
+---
+# Demo only. In week 4 you replace this with a Secret created from the CLI:
+#   kubectl -n taskapi create secret generic task-api-secret \
+#           --from-literal=POSTGRES_PASSWORD='...'
+# Base64 is encoding, not encryption — never commit a real password.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: task-api-secret
+  namespace: taskapi
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: changeme
