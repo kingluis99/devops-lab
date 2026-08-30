@@ -29,17 +29,17 @@ public class TaskController {
         this.repository = repository;
     }
 
-    public record CreateTaskRequest(@NotBlank @Size(max = 200) String title) {
-    }
-
-    public record UpdateTaskRequest(@NotBlank @Size(max = 200) String title, boolean done) {
-    }
-
-    // public record CreateTaskRequest(@NotBlank @Size(max = 200) String title, Integer priority) {
+    // public record CreateTaskRequest(@NotBlank @Size(max = 200) String title) {
     // }
 
-    // public record UpdateTaskRequest(@NotBlank @Size(max = 200) String title, boolean done, Integer priority) {
+    // public record UpdateTaskRequest(@NotBlank @Size(max = 200) String title, boolean done) {
     // }
+
+    public record CreateTaskRequest(@NotBlank @Size(max = 200) String title, Integer priority) {
+    }
+
+    public record UpdateTaskRequest(@NotBlank @Size(max = 200) String title, boolean done, Integer priority) {
+    }
 
     @GetMapping
     public List<Task> list(@RequestParam(required = false) Boolean done) {
@@ -63,7 +63,7 @@ public class TaskController {
         Task task = get(id);
         task.setTitle(request.title());
         task.setDone(request.done());
-        // task.setPriority(request.priority());
+        task.setPriority(request.priority());
         return repository.save(task);
     }
 

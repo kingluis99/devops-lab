@@ -30,7 +30,7 @@ public class Task {
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    // private Integer priority;
+    private Integer priority;
 
     protected Task() {
     }
@@ -63,13 +63,13 @@ public class Task {
         return createdAt;
     }
 
-    // public Integer getPriority() {
-    //     return priority;
-    // }
+    public Integer getPriority() {
+        return priority;
+    }
 
-    // public void setPriority(Integer priority) {
-    //     this.priority = priority;
-    // }
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
 
     
 }
